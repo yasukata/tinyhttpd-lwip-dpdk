@@ -138,6 +138,8 @@ static err_t accept_handler(void *arg __attribute__((unused)), struct tcp_pcb *t
 	tcp_recv(tpcb, tcp_recv_handler);
 	tcp_setprio(tpcb, TCP_PRIO_MAX);
 
+	tcp_nagle_disable(tpcb);
+
 	tpcb->so_options |= SOF_KEEPALIVE;
 	tpcb->keep_intvl = (60 * 1000);
 	tpcb->keep_idle = (60 * 1000);
