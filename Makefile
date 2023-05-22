@@ -26,7 +26,7 @@ DPDK_SRC_DIR = $(DPDK_DIR)/dpdk-$(DPDK_VER)
 DPDK_INSTALL_DIR = $(DPDK_DIR)/install
 DPDK_PKG_CONFIG_PATH=$(DPDK_INSTALL_DIR)/lib/x86_64-linux-gnu/pkgconfig
 DPDK_PKG_CONFIG_FILE=$(DPDK_PKG_CONFIG_PATH)/libdpdk.pc
-CFLAGS += $(shell PKG_CONFIG_PATH=$(DPDK_PKG_CONFIG_PATH) $(PKGCONF) --cflags libdpdk)
+CFLAGS += -I. $(shell PKG_CONFIG_PATH=$(DPDK_PKG_CONFIG_PATH) $(PKGCONF) --cflags libdpdk)
 LDFLAGS += $(shell PKG_CONFIG_PATH=$(DPDK_PKG_CONFIG_PATH) $(PKGCONF) --libs libdpdk)
 
 # for lwip
