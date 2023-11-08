@@ -10,7 +10,7 @@ LWIP_VER=2.1.3
 CONTRIB_VER=2.1.0
 
 NO_MAN=
-CFLAGS = -O3 -pipe
+CFLAGS = -O3 -pipe -g -rdynamic
 CFLAGS += -Werror -Wall -Wunused-function
 CFLAGS += -Wextra
 
