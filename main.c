@@ -279,46 +279,14 @@ int main(int argc, char *const *argv)
 	int server_port = 10000, num_conn = 1;
 	bool mode_server = true;
 
-	/* setting up dpdk */
 	{
 		int ret;
-		uint16_t nb_rxd = NUM_SLOT;
-		uint16_t nb_txd = NUM_SLOT;
-
 		assert((ret = rte_eal_init(argc, (char **) argv)) >= 0);
 		argc -= ret;
 		argv += ret;
-
-		assert(rte_eth_dev_count_avail() == 1);
-
-		assert((pktmbuf_pool = rte_pktmbuf_pool_create("mbuf_pool",
-					RTE_MAX(1 /* nb_ports */ * (nb_rxd + nb_txd + MAX_PKT_BURST + 1 * MEMPOOL_CACHE_SIZE), 8192),
-					MEMPOOL_CACHE_SIZE, 0, RTE_MBUF_DEFAULT_BUF_SIZE,
-					rte_socket_id())) != NULL);
-
-		{
-			struct rte_eth_dev_info dev_info;
-			struct rte_eth_conf local_port_conf = { 0 };
-
-			assert(rte_eth_dev_info_get(0 /* port id */, &dev_info) >= 0);
-
-			assert(rte_eth_dev_configure(0 /* port id */, 1 /* num queues */, 1 /* num queues */, &local_port_conf) >= 0);
-
-			assert(rte_eth_dev_adjust_nb_rx_tx_desc(0 /* port id */, &nb_rxd, &nb_txd) >= 0);
-
-			assert(rte_eth_rx_queue_setup(0 /* port id */, 0 /* queue */, nb_rxd,
-						rte_eth_dev_socket_id(0 /* port id */),
-						&dev_info.default_rxconf,
-						pktmbuf_pool) >= 0);
-
-			assert(rte_eth_tx_queue_setup(0 /* port id */, 0 /* queue */, nb_txd,
-						rte_eth_dev_socket_id(0 /* port id */),
-						&dev_info.default_txconf) >= 0);
-
-			assert(rte_eth_dev_start(0 /* port id */) >= 0);
-			assert(rte_eth_promiscuous_enable(0 /* port id */) >= 0);
-		}
 	}
+
+	assert(rte_eth_dev_count_avail() == 1);
 
 	{
 		int ch;
@@ -356,6 +324,38 @@ int main(int argc, char *const *argv)
 			}
 		}
 		assert(_a && _g && _m);
+	}
+
+	{
+		uint16_t nb_rxd = NUM_SLOT;
+		uint16_t nb_txd = NUM_SLOT;
+		assert((pktmbuf_pool = rte_pktmbuf_pool_create("mbuf_pool",
+					RTE_MAX(1 /* nb_ports */ * (nb_rxd + nb_txd + MAX_PKT_BURST + 1 * MEMPOOL_CACHE_SIZE), 8192),
+					MEMPOOL_CACHE_SIZE, 0, RTE_MBUF_DEFAULT_BUF_SIZE,
+					rte_socket_id())) != NULL);
+
+		{
+			struct rte_eth_dev_info dev_info;
+			struct rte_eth_conf local_port_conf = { 0 };
+
+			assert(rte_eth_dev_info_get(0 /* port id */, &dev_info) >= 0);
+
+			assert(rte_eth_dev_configure(0 /* port id */, 1 /* num queues */, 1 /* num queues */, &local_port_conf) >= 0);
+
+			assert(rte_eth_dev_adjust_nb_rx_tx_desc(0 /* port id */, &nb_rxd, &nb_txd) >= 0);
+
+			assert(rte_eth_rx_queue_setup(0 /* port id */, 0 /* queue */, nb_rxd,
+						rte_eth_dev_socket_id(0 /* port id */),
+						&dev_info.default_rxconf,
+						pktmbuf_pool) >= 0);
+
+			assert(rte_eth_tx_queue_setup(0 /* port id */, 0 /* queue */, nb_txd,
+						rte_eth_dev_socket_id(0 /* port id */),
+						&dev_info.default_txconf) >= 0);
+
+			assert(rte_eth_dev_start(0 /* port id */) >= 0);
+			assert(rte_eth_promiscuous_enable(0 /* port id */) >= 0);
+		}
 	}
 
 	/* setting up lwip */
