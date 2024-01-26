@@ -278,6 +278,7 @@ int main(int argc, char *const *argv)
 	size_t content_len = 1;
 	int server_port = 10000, num_conn = 1;
 	bool mode_server = true;
+	int max_epoll_wait_timeout_ms = 0;
 
 	{
 		int ret;
@@ -291,7 +292,7 @@ int main(int argc, char *const *argv)
 	{
 		int ch;
 		bool _a = false, _g = false, _m = false;
-		while ((ch = getopt(argc, argv, "a:c:g:l:m:p:s:")) != -1) {
+		while ((ch = getopt(argc, argv, "a:c:e:g:l:m:p:s:")) != -1) {
 			switch (ch) {
 			case 'a':
 				inet_pton(AF_INET, optarg, &_addr);
@@ -299,6 +300,9 @@ int main(int argc, char *const *argv)
 				break;
 			case 'c':
 				num_conn = atoi(optarg);
+				break;
+			case 'e':
+				assert(sscanf(optarg, "%d", &max_epoll_wait_timeout_ms) == 1);
 				break;
 			case 'g':
 				inet_pton(AF_INET, optarg, &_gate);
@@ -340,6 +344,9 @@ int main(int argc, char *const *argv)
 
 			assert(rte_eth_dev_info_get(0 /* port id */, &dev_info) >= 0);
 
+			if (max_epoll_wait_timeout_ms)
+				local_port_conf.intr_conf.rxq = 1;
+
 			assert(rte_eth_dev_configure(0 /* port id */, 1 /* num queues */, 1 /* num queues */, &local_port_conf) >= 0);
 
 			assert(rte_eth_dev_adjust_nb_rx_tx_desc(0 /* port id */, &nb_rxd, &nb_txd) >= 0);
@@ -355,6 +362,9 @@ int main(int argc, char *const *argv)
 
 			assert(rte_eth_dev_start(0 /* port id */) >= 0);
 			assert(rte_eth_promiscuous_enable(0 /* port id */) >= 0);
+
+			if (max_epoll_wait_timeout_ms)
+				assert(!rte_eth_dev_rx_intr_ctl_q(0 /* port id */, 0 /* queue */, RTE_EPOLL_PER_THREAD, RTE_INTR_EVENT_ADD, NULL));
 		}
 	}
 
@@ -435,6 +445,14 @@ int main(int argc, char *const *argv)
 					prev_ts = now;
 				}
 
+			}
+			if (!nb_rx && max_epoll_wait_timeout_ms) {
+				assert(!rte_eth_dev_rx_intr_enable(0 /* port id */, 0 /* queue id */));
+				{
+					struct rte_epoll_event ev;
+					(void) rte_epoll_wait(RTE_EPOLL_PER_THREAD, &ev, 1, max_epoll_wait_timeout_ms < 0 ? 100 : (max_epoll_wait_timeout_ms > 100 ? 100 : max_epoll_wait_timeout_ms));
+				}
+				rte_eth_dev_rx_intr_disable(0 /* port id */, 0 /* queue id */);
 			}
 		}
 	}
