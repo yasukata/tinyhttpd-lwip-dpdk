@@ -13,6 +13,7 @@ NO_MAN=
 CFLAGS = -O3 -pipe -g -rdynamic
 CFLAGS += -Werror -Wall -Wunused-function
 CFLAGS += -Wextra
+CFLAGS += -I.
 
 LDFLAGS += -lpthread -lm
 
