@@ -171,7 +171,7 @@ static err_t tcp_recv_handler(void *arg, struct tcp_pcb *tpcb,
 		case 1:
 			{
 				long i;
-				for (i = 0; i < r->cur - 4 && r->state == 1; i++) {
+				for (i = 0; i <= r->cur - 4 && r->state == 1; i++) {
 					if (r->buf[i + 0] == '\r' && r->buf[i + 1] == '\n' && r->buf[i + 2] == '\r' && r->buf[i + 3] == '\n') {
 						r->cur -= i + 4;
 						r->content_recvd = 0;
